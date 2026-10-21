@@ -10,7 +10,6 @@ const { execSync } = require('child_process');
 const PORT = process.env.PORT || 3000;
 const args = process.argv.slice(2);
 const shouldCopy = args.includes('--copy');
-const shouldShowQR = args.includes('--qr');
 
 function getNetworkAddresses() {
   const interfaces = os.networkInterfaces();
@@ -42,7 +41,7 @@ function getNetworkAddresses() {
       if (net.internal) continue;
       if (net.address.startsWith('127.')) continue;
       if (net.address.startsWith('169.254.')) continue; // Auto-IP tak tersambung
-      if (net.address.startsWith('192.168.56.')) continue; // VirtualBox adapter
+      if (net.address.startsWith('192.168.56.')) continue; // VirtualBox host-only
 
       let score = 50;
       if (isVirtual) score -= 100;
@@ -80,12 +79,12 @@ function copyToClipboard(text) {
   }
 }
 
-async function main() {
+function main() {
   const candidates = getNetworkAddresses();
   const localUrl = `http://localhost:${PORT}`;
 
   console.log('\n' + '='.repeat(67));
-  console.log('       SISTEM INFORMASI ARSIP & CAPAIAN KINERJA (PA)') ;
+  console.log('       SISTEM INFORMASI ARSIP & CAPAIAN KINERJA (PA)');
   console.log('='.repeat(67));
   console.log('\n  [1] Akses dari LAPTOP INI (Server Host):');
   console.log(`      -> \x1b[36m${localUrl}\x1b[0m`);
@@ -94,8 +93,8 @@ async function main() {
     const primary = candidates[0];
     const networkUrl = `http://${primary.address}:${PORT}`;
 
-    console.log('\n  [2] Akses dari HP / LAPTOP LAIN (Wi-Fi / LAN yang sama):');
-    console.log(`      -> \x1b[32m\x1b[1m${networkUrl}\x1b[0m   (Adaptor: ${primary.name})`);
+    console.log('\n  [2] Akses dari HP / LAPTOP LAIN (Wi-Fi yang sama):');
+    console.log(`      -> \x1b[32m\x1b[1m${networkUrl}\x1b[0m   (Jaringan: ${primary.name})`);
 
     if (candidates.length > 1) {
       console.log('\n      Alternatif IP lain yang aktif:');
@@ -114,21 +113,7 @@ async function main() {
       console.log('       Tinggal tekan Paste (Ctrl + V) di WhatsApp / Browser rekan.');
     }
 
-    if (shouldShowQR) {
-      try {
-        const qrcode = require('qrcode');
-        console.log('\n  Scan QR Code ini lewat Kamera HP untuk langsung membuka:');
-        const qrString = await qrcode.toString(networkUrl, {
-          type: 'terminal',
-          small: true
-        });
-        console.log(qrString);
-      } catch (err) {
-        // QR code opsional jika modul ada
-      }
-    }
-
-    console.log('\n  Catatan: Pastikan perangkat lain terhubung ke Wi-Fi yang sama');
+    console.log('\n  Catatan: Pastikan rekan kerja terhubung ke Wi-Fi yang sama');
     console.log('  dengan laptop ini agar link di atas dapat dibuka.');
   } else {
     console.log('\n  [!] STATUS JARINGAN:');
@@ -138,8 +123,8 @@ async function main() {
   }
 
   console.log('='.repeat(67));
-  console.log('  (JANGAN TUTUP jendela ini selama aplikasi sedang digunakan)');
+  console.log('  (JANGAN TUTUP jendela terminal ini selama memakai aplikasi)');
   console.log('='.repeat(67) + '\n');
 }
 
-main().catch(console.error);
+main();
