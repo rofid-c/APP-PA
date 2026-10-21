@@ -1,0 +1,55 @@
+// Prisma schema untuk Arsip Digital BHT
+// Database: SQLite (file lokal, gampang di-backup, bisa diganti PostgreSQL nanti
+// tinggal ubah "provider" dan DATABASE_URL di .env)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // hash bcrypt
+  namaLengkap String
+  role      String   @default("petugas") // "admin" | "petugas"
+  createdAt DateTime @default(now())
+
+  arsipDiupload Arsip[]      @relation("uploader")
+  logs          LogAktivitas[]
+}
+
+model Arsip {
+  id            Int      @id @default(autoincrement())
+  nomorPerkara  String
+  jenisPerkara  String   // "Cerai Gugat" | "Cerai Talak" | "Dispensasi Kawin" | "Lainnya"
+  namaPihak     String?
+  tanggalBht    DateTime
+  tahun         Int      // disimpan terpisah supaya query statistik per tahun cepat
+  fileName      String   // nama file asli
+  filePath      String   // path relatif di dalam folder data/uploads
+  fileSize      Int      // dalam bytes
+  keterangan    String?
+  createdAt     DateTime @default(now())
+
+  uploadedBy    Int
+  uploader      User     @relation("uploader", fields: [uploadedBy], references: [id])
+
+  @@index([nomorPerkara])
+  @@index([jenisPerkara])
+  @@index([tahun])
+}
+
+model LogAktivitas {
+  id        Int      @id @default(autoincrement())
+  aksi      String   // "upload" | "download" | "hapus" | "login" | "backup"
+  deskripsi String
+  createdAt DateTime @default(now())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}

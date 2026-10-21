@@ -1,0 +1,182 @@
+==================================================================
+ PANDUAN INSTALASI - ARSIP DIGITAL BHT (PA GUNUNG SUGIH)
+==================================================================
+
+PERSYARATAN VERSI NODE.JS
+------------------------------------------------------------------
+Aplikasi ini sudah menggunakan "better-sqlite3" v12.11.1 yang 
+mendukung penuh Node.js versi 18, 20, 22, hingga 24 di Windows.
+
+Kelebihan sistem otomatis ini:
+1. Jika Node.js belum ada di laptop baru, script START.bat dapat
+   langsung mendownload & memasangnya otomatis via winget.
+2. Jika versi Node.js berbeda (misalnya laptop A pakai Node 20 dan
+   laptop B pakai Node 22/24), START.bat akan mendeteksi perbedaan
+   dan otomatis menyelaraskan (npm rebuild) tanpa perlu setup manual.
+
+Rekomendasi versi: Node.js versi LTS (v20 atau v22).
+Download resmi: https://nodejs.org
+Cek versi terpasang: node -v
+
+
+
+==================================================================
+1. SETUP AWAL (SEKALI SAJA)
+==================================================================
+
+1.1. Extract project, lalu masuk ke foldernya.
+
+1.2. Pastikan "node -v" sudah menunjukkan versi yang tepat
+     berdasarkan poin sebelumnya.
+
+1.3. Install dependencies:
+
+       npm install
+
+1.4. Buat database + akun admin awal:
+
+       npm run seed
+
+     Ini membuat data/arsip.db beserta akun:
+       username: admin
+       password: admin123
+     Ganti password ini lewat menu profil setelah login pertama.
+
+     Catatan: tabel-tabel dibuat otomatis oleh lib/db.js (CREATE
+     TABLE IF NOT EXISTS) begitu proses Next.js start pertama kali
+     me-require file itu. "npm run seed" khusus untuk membuat akun
+     admin awal -- jalankan sekali saja, aman dijalankan ulang
+     (idempotent, cek existing user dulu).
+
+
+Catatan OPSIONAL -- kunci sesi login (JWT_SECRET):
+Aplikasi ini menandatangani sesi login pakai sebuah kunci rahasia
+(JWT_SECRET). Kalau tidak diatur, otomatis dipakai kunci bawaan
+yang sama untuk semua orang yang install project ini apa adanya
+("dev-secret-change-me" di lib/auth.js) -- cukup aman untuk
+pemakaian internal di jaringan kantor tertutup. TIDAK WAJIB
+diatur untuk instalasi biasa, boleh dilewati.
+
+Tapi kalau aplikasi ini nanti bisa diakses dari luar jaringan
+kantor/internet, sebaiknya diatur kunci sendiri:
+1. Copy file ".env.example" jadi ".env"
+2. Buka ".env", ganti isi JWT_SECRET dengan string acak yang
+   panjang, contoh:
+     JWT_SECRET="rahasia-pengadilan-agama-gunung-sugih-2026"
+3. Simpan, lalu jalankan ulang aplikasinya (npm start / restart
+   pm2, tergantung cara jalaninnya -- lihat bagian 2 & 3).
+
+
+==================================================================
+2. MENJALANKAN VERSI PRODUKSI (BUILD)
+==================================================================
+
+2.1. Build:
+
+       npm run build
+
+2.2. Jalankan hasil build:
+
+       npm start
+
+     Default Next.js listen di port 3000. Untuk ganti port:
+
+       Windows (cmd):  set PORT=8080 && npm start
+       Linux/macOS:    PORT=8080 npm start
+
+2.3. Buka browser ke http://localhost:3000 (atau port yang dipakai)
+     dan login dengan akun admin.
+
+
+==================================================================
+3. SUPAYA APLIKASI TETAP JALAN SETELAH TERMINAL DITUTUP
+==================================================================
+
+"npm start" akan berhenti begitu terminal/Command Prompt ditutup atau
+Ctrl+C ditekan. Untuk pemakaian di server/komputer yang harus
+online terus, pakai salah satu:
+
+Opsi A - PM2 (paling praktis untuk single-server Node.js app):
+
+   npm install -g pm2
+   pm2 start npm --name "arsip-bht" -- start
+   pm2 save
+   pm2 startup        (ikuti instruksi yang muncul, ini yang
+                        mendaftarkan pm2 supaya auto-start saat
+                        komputer/server reboot)
+
+   Perintah berguna lainnya:
+   pm2 logs arsip-bht
+   pm2 restart arsip-bht
+   pm2 stop arsip-bht
+
+Opsi B - Windows Task Scheduler:
+   Buat scheduled task yang menjalankan "npm start" di folder
+   project saat sistem startup/login, action "Start a program"
+   dengan program "npm.cmd" (cari lokasi pastinya lewat
+   "where npm"), argument "start", start-in diisi path folder
+   project.
+
+Opsi C - Linux systemd service:
+   Buat unit file, contoh /etc/systemd/system/arsip-bht.service:
+
+   [Unit]
+   Description=Arsip Digital BHT
+   After=network.target
+
+   [Service]
+   Type=simple
+   WorkingDirectory=/path/ke/folder/project
+   ExecStart=/usr/bin/npm start
+   Restart=on-failure
+   Environment=NODE_ENV=production
+
+   [Install]
+   WantedBy=multi-user.target
+
+   Lalu:
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now arsip-bht
+   sudo systemctl status arsip-bht
+
+
+==================================================================
+4. UPDATE / REBUILD SETELAH ADA PERUBAHAN KODE
+==================================================================
+
+Setiap ada perubahan source code, ulangi:
+
+   npm run build
+   npm start          (atau "pm2 restart arsip-bht" kalau pakai pm2)
+
+Tidak perlu "npm install" ulang kecuali ada dependency baru yang
+ditambahkan ke package.json. Tidak perlu "npm run seed" ulang
+kecuali file data/arsip.db sengaja dihapus/reset.
+
+
+==================================================================
+5. TROUBLESHOOTING SINGKAT
+==================================================================
+
+- Error node-gyp/Python saat "npm install"
+  -> Node masih versi 23+. Cek "node -v", turunkan ke 22 LTS.
+     Kalau sebelumnya sempat ada percobaan "npm install" yang
+     gagal di Node versi salah, bersihkan dulu sisa instalasinya
+     sebelum coba lagi:
+       Windows (cmd):  rmdir /s /q node_modules
+                        del package-lock.json
+       Linux:          rm -rf node_modules package-lock.json
+     Baru jalankan "npm install" lagi setelah Node 22 aktif.
+
+- Port sudah dipakai (EADDRINUSE)
+  -> Ada instance lain yang masih jalan (cek pm2 list / task
+     manager), atau pakai PORT lain seperti contoh di bagian 2.2.
+
+- Lupa password admin
+  -> Reset manual lewat data/arsip.db (better-sqlite3, bisa dibuka
+     pakai tool seperti DB Browser for SQLite), update kolom
+     password di tabel User dengan hash bcrypt baru, atau hapus
+     baris usernya lalu jalankan "npm run seed" lagi untuk
+     membuatnya ulang dengan password default.
+
+==================================================================
