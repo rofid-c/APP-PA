@@ -132,17 +132,10 @@ goto JALANKAN_PROD
 echo [5/5] Build aplikasi (.next)... OK!
 
 :JALANKAN_PROD
-echo.
-echo =====================================================================
-echo  Aplikasi SIAP DIJALANKAN!
-echo  Server berjalan di: http://localhost:3000
-echo.
-echo  Browser akan otomatis terbuka dalam 3 detik...
-echo  (JANGAN TUTUP jendela terminal ini selama memakai aplikasi)
-echo =====================================================================
-echo.
+:: Deteksi alamat IP jaringan dan salin link secara otomatis ke clipboard
+call node scripts/detect-ip.js --copy
 
-:: Buka browser otomatis setelah delay 3 detik
+:: Buka browser otomatis di laptop ini setelah delay 3 detik
 start "" cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:3000"
 
 :: Jalankan server produksi
@@ -158,6 +151,7 @@ goto COBA_DEV
 :COBA_DEV
 echo.
 echo [INFO] Menjalankan via mode Development (npm run dev)...
+call node scripts/detect-ip.js --copy
 start "" cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:3000"
 call npm run dev
 
