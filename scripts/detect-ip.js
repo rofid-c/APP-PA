@@ -7,9 +7,28 @@
 const os = require('os');
 const { execSync } = require('child_process');
 
-const PORT = process.env.PORT || 3000;
+const fs = require('fs');
+
+let PORT = process.env.PORT || 3000;
+if (fs.existsSync('.env')) {
+  try {
+    const envContent = fs.readFileSync('.env', 'utf8');
+    const match = envContent.match(/^PORT\s*=\s*['"]?(\d+)['"]?/m);
+    if (match) {
+      PORT = parseInt(match[1], 10);
+    }
+  } catch (e) {}
+}
+
 const args = process.argv.slice(2);
 const shouldCopy = args.includes('--copy');
+
+function formatUrl(host, port) {
+  if (Number(port) === 80) {
+    return `http://${host}`;
+  }
+  return `http://${host}:${port}`;
+}
 
 function getNetworkAddresses() {
   const interfaces = os.networkInterfaces();
@@ -81,7 +100,7 @@ function copyToClipboard(text) {
 
 function main() {
   const candidates = getNetworkAddresses();
-  const localUrl = `http://localhost:${PORT}`;
+  const localUrl = formatUrl('localhost', PORT);
 
   console.log('\n' + '='.repeat(67));
   console.log('       SISTEM INFORMASI ARSIP & CAPAIAN KINERJA (PA)');
@@ -91,7 +110,7 @@ function main() {
 
   if (candidates.length > 0) {
     const primary = candidates[0];
-    const networkUrl = `http://${primary.address}:${PORT}`;
+    const networkUrl = formatUrl(primary.address, PORT);
 
     console.log('\n  [2] Akses dari HP / LAPTOP LAIN (Wi-Fi yang sama):');
     console.log(`      -> \x1b[32m\x1b[1m${networkUrl}\x1b[0m   (Jaringan: ${primary.name})`);
@@ -99,7 +118,7 @@ function main() {
     if (candidates.length > 1) {
       console.log('\n      Alternatif IP lain yang aktif:');
       for (let i = 1; i < candidates.length; i++) {
-        console.log(`      -> http://${candidates[i].address}:${PORT}  (${candidates[i].name})`);
+        console.log(`      -> ${formatUrl(candidates[i].address, PORT)}  (${candidates[i].name})`);
       }
     }
 
@@ -123,7 +142,8 @@ function main() {
   }
 
   console.log('='.repeat(67));
-  console.log('  (JANGAN TUTUP jendela terminal ini selama memakai aplikasi)');
+  console.log('  * JANGAN TUTUP jendela terminal ini selama memakai aplikasi.');
+  console.log('  * Untuk MEMATIKAN server: cukup klik tanda [X] atau klik STOP.bat');
   console.log('='.repeat(67) + '\n');
 }
 

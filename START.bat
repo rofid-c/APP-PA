@@ -132,14 +132,23 @@ goto JALANKAN_PROD
 echo [5/5] Build aplikasi (.next)... OK!
 
 :JALANKAN_PROD
+:: Cek konfigurasi PORT (default: 3000 atau dari .env)
+set APP_PORT=3000
+if exist ".env" (
+    for /f "tokens=1,2 delims==" %%A in (.env) do (
+        if /i "%%A"=="PORT" set APP_PORT=%%B
+    )
+)
+set PORT=%APP_PORT%
+
 :: Deteksi alamat IP jaringan dan salin link secara otomatis ke clipboard
 call node scripts/detect-ip.js --copy
 
 :: Buka browser otomatis di laptop ini setelah delay 3 detik
-start "" cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:3000"
+start "" cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:%APP_PORT%"
 
 :: Jalankan server produksi
-call npm start
+call npx next start -H 0.0.0.0 -p %APP_PORT%
 if %errorlevel% neq 0 goto COBA_DEV
 goto SELESAI
 
@@ -152,8 +161,8 @@ goto COBA_DEV
 echo.
 echo [INFO] Menjalankan via mode Development (npm run dev)...
 call node scripts/detect-ip.js --copy
-start "" cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:3000"
-call npm run dev
+start "" cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:%APP_PORT%"
+call npx next dev -H 0.0.0.0 -p %APP_PORT%
 
 :SELESAI
 echo.
