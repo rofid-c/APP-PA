@@ -148,7 +148,11 @@ call node scripts/detect-ip.js --copy
 start "" cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:%APP_PORT%"
 
 :: Jalankan server produksi
-call npx next start -H 0.0.0.0 -p %APP_PORT%
+if exist "node_modules\next\dist\bin\next" (
+    node node_modules\next\dist\bin\next start -H 0.0.0.0 -p %APP_PORT% <nul
+) else (
+    call npm start <nul
+)
 if %errorlevel% neq 0 goto COBA_DEV
 goto SELESAI
 
@@ -162,11 +166,11 @@ echo.
 echo [INFO] Menjalankan via mode Development (npm run dev)...
 call node scripts/detect-ip.js --copy
 start "" cmd /c "timeout /t 4 /nobreak >nul & start http://localhost:%APP_PORT%"
-call npx next dev -H 0.0.0.0 -p %APP_PORT%
+if exist "node_modules\next\dist\bin\next" (
+    node node_modules\next\dist\bin\next dev -H 0.0.0.0 -p %APP_PORT% <nul
+) else (
+    call npm run dev <nul
+)
 
 :SELESAI
-echo.
-echo =====================================================================
-echo  Server telah berhenti.
-echo =====================================================================
-pause
+exit /b

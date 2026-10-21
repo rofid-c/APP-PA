@@ -143,7 +143,7 @@ function main() {
 
   console.log('='.repeat(67));
   console.log('  * JANGAN TUTUP jendela terminal ini selama memakai aplikasi.');
-  console.log('  * Untuk MEMATIKAN server: cukup klik tanda [X] atau klik STOP.bat');
+  console.log('  * Untuk MEMATIKAN server: cukup tutup jendela ini [X] atau Ctrl + C');
   console.log('='.repeat(67) + '\n');
 }
 
