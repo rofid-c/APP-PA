@@ -21,16 +21,13 @@ echo (Harap tunggu, proses ini 100%% otomatis tanpa perlu mengetik apapun)
 echo.
 
 :: Tutup server lama jika sedang berjalan agar port 3000 bebas
-for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :3000 ^| findstr LISTENING') do (
-    echo [INFO] Menutup server aplikasi yang sedang aktif (PID: %%a)...
-    taskkill /f /pid %%a >nul 2>nul
-)
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :3000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>nul
 
 :: 1. Cek apakah Git terpasang di komputer ini
 where git >nul 2>nul
-if %errorlevel% neq 0 goto UPDATE_VIA_POWERSHELL
+if %errorlevel% neq 0 goto UNDUH_POWERSHELL
 
-:UPDATE_VIA_GIT
+:UNDUH_GIT
 echo [1/3] Memeriksa repositori Git...
 if not exist ".git\" (
     echo       Menginisialisasi koneksi repositori...
@@ -43,24 +40,17 @@ if not exist ".git\" (
 
 echo [2/3] Mengunduh pembaruan terbaru dari GitHub...
 git fetch origin main
-if %errorlevel% neq 0 (
-    echo.
-    echo [PERINGATAN] Gagal mengambil data via Git. Mencoba metode unduhan langsung...
-    goto UPDATE_VIA_POWERSHELL
-)
+if %errorlevel% neq 0 goto UNDUH_POWERSHELL
 
 :: Tarik kode terbaru, simpan file lokal yang di-ignore (.env dan data/)
 git reset --hard origin/main
-if %errorlevel% neq 0 (
-    echo [INFO] Menyelaraskan berkas lokal...
-    git pull origin main --rebase
-)
+if %errorlevel% neq 0 git pull origin main --rebase
 echo       Pembaruan berkas selesai diunduh!
 echo.
 goto BANGUN_APLIKASI
 
-:UPDATE_VIA_POWERSHELL
-echo [1/3] Git tidak terdeteksi. Menggunakan jalur unduhan langsung (PowerShell)...
+:UNDUH_POWERSHELL
+echo [1/3] Git tidak terdeteksi. Menggunakan jalur unduhan langsung via PowerShell...
 echo [2/3] Mengunduh paket pembaruan dari GitHub...
 
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $wc = New-Object System.Net.WebClient; try { $wc.DownloadFile('https://github.com/rofid-c/APP-PA/archive/refs/heads/main.zip', 'update-temp.zip'); Write-Host '       Unduhan selesai!' } catch { Write-Host '       [ERROR] Gagal mengunduh: ' $_.Exception.Message; exit 1 }"
@@ -87,10 +77,9 @@ echo  [V] Kode terbaru dari GitHub berhasil diunduh.
 echo  [V] Build produksi (npm run build) telah berhasil dibuat.
 echo  [V] Database arsip dan berkas kantor Anda TETAP AMAN dan UTUH.
 echo.
-echo  Aplikasi akan otomatis dijalankan dalam 5 detik...
-echo  (Tekan tombol apa saja untuk langsung menjalankan sekarang)
+echo  Aplikasi akan otomatis dijalankan dalam 3 detik...
 echo =====================================================================
-timeout /t 5 >nul
+powershell -Command "Start-Sleep -Seconds 3"
 call START.bat
 exit /b
 
