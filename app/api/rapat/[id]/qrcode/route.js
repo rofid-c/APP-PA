@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 const QRCode = require('qrcode');
 const { db } = require('../../../../../lib/db');
+const { getExternalBaseUrl } = require('../../../../../lib/network');
 
 function parseValidId(raw) {
   const id = Number(raw);
@@ -15,8 +16,9 @@ export async function GET(request, { params }) {
   const rapat = db.prepare('SELECT id, judul FROM Rapat WHERE id = ?').get(id);
   if (!rapat) return NextResponse.json({ error: 'Data rapat tidak ditemukan.' }, { status: 404 });
 
-  const url = new URL(request.url);
-  const targetUrl = `${url.protocol}//${url.host}/presensi/${id}`;
+  // Gunakan IP jaringan Wi-Fi/LAN lokal (bukan localhost) supaya HP peserta bisa langsung scan & akses
+  const baseUrl = getExternalBaseUrl(request);
+  const targetUrl = `${baseUrl}/presensi/${id}`;
 
   const pngBuffer = await QRCode.toBuffer(targetUrl, {
     type: 'png',

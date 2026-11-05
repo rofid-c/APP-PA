@@ -3,6 +3,7 @@ import { unlink } from 'fs/promises';
 import path from 'path';
 const { db, UPLOAD_DIR } = require('../../../../lib/db');
 const { getSession } = require('../../../../lib/session');
+const { getExternalBaseUrl } = require('../../../../lib/network');
 
 function parseValidId(raw) {
   const id = Number(raw);
@@ -38,11 +39,15 @@ export async function GET(request, { params }) {
     )
     .all(id);
 
+  const baseUrl = getExternalBaseUrl(request);
+
   return NextResponse.json({
     data: {
       ...rapat,
       presensi,
       jumlahPresensi: presensi.length,
+      presensiUrl: `${baseUrl}/presensi/${id}`,
+      networkBaseUrl: baseUrl,
     },
   });
 }

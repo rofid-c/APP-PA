@@ -265,8 +265,7 @@ export default function DetailRapat({ id, role, user }) {
   }
 
   function handleCopyPresensiUrl() {
-    const origin = window.location.origin;
-    const url = `${origin}/presensi/${id}`;
+    const url = data?.presensiUrl || (typeof window !== 'undefined' ? `${window.location.origin}/presensi/${id}` : '');
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
@@ -883,22 +882,27 @@ export default function DetailRapat({ id, role, user }) {
               Peserta cukup scan QR code di atas dengan kamera HP untuk mengisi presensi dan membubuhkan tanda tangan digital secara langsung.
             </div>
 
-            <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-              <input
-                type="text"
-                readOnly
-                className="input-field"
-                value={typeof window !== 'undefined' ? `${window.location.origin}/presensi/${id}` : ''}
-                style={{ fontSize: 12, background: '#f8faf9' }}
-              />
-              <button
-                type="button"
-                onClick={handleCopyPresensiUrl}
-                className="btn-secondary"
-                style={{ padding: '8px 12px', fontSize: 12.5, whiteSpace: 'nowrap' }}
-              >
-                {copiedLink ? '✓ Tersalin!' : 'Salin Link'}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  type="text"
+                  readOnly
+                  className="input-field"
+                  value={data.presensiUrl || (typeof window !== 'undefined' ? `${window.location.origin}/presensi/${id}` : '')}
+                  style={{ fontSize: 12, background: '#f8faf9', fontWeight: 600, color: '#0f4d3a' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyPresensiUrl}
+                  className="btn-secondary"
+                  style={{ padding: '8px 12px', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                >
+                  {copiedLink ? '✓ Tersalin!' : 'Salin Link'}
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: '#146c4f', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>📶</span> Tautan otomatis menggunakan IP Wi-Fi/LAN kantor agar langsung bisa dibuka dari HP.
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>

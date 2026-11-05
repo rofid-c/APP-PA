@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 const { db } = require('../../../lib/db');
 const { getSession } = require('../../../lib/session');
+const { getExternalBaseUrl } = require('../../../lib/network');
 
 // GET /api/rapat?q=...&tahun=...&bulan=...&page=1
 export async function GET(request) {
@@ -33,7 +34,7 @@ export async function GET(request) {
 
   const total = db.prepare(`SELECT COUNT(*) as c FROM Rapat ${where}`).get(...params).c;
 
-  const data = db
+  const rows = db
     .prepare(
       `SELECT Rapat.*, User.namaLengkap as pembuatNama,
        (SELECT COUNT(*) FROM PresensiRapat WHERE PresensiRapat.rapatId = Rapat.id) as jumlahPresensi
@@ -45,7 +46,13 @@ export async function GET(request) {
     )
     .all(...params, pageSize, (page - 1) * pageSize);
 
-  return NextResponse.json({ data, total, page, pageSize });
+  const baseUrl = getExternalBaseUrl(request);
+  const data = rows.map((r) => ({
+    ...r,
+    presensiUrl: `${baseUrl}/presensi/${r.id}`,
+  }));
+
+  return NextResponse.json({ data, total, page, pageSize, networkBaseUrl: baseUrl });
 }
 
 // POST /api/rapat (create new meeting)

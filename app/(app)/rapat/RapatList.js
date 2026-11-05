@@ -123,9 +123,10 @@ export default function RapatList({ role, user }) {
     }
   }
 
-  function handleCopyLink(rapatId) {
-    const origin = window.location.origin;
-    const url = `${origin}/presensi/${rapatId}`;
+  function handleCopyLink(target) {
+    const url = typeof target === 'string' && target.startsWith('http')
+      ? target
+      : `${window.location.origin}/presensi/${target}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2500);
@@ -623,17 +624,20 @@ export default function RapatList({ role, user }) {
                   type="text"
                   readOnly
                   className="input-field"
-                  value={typeof window !== 'undefined' ? `${window.location.origin}/presensi/${qrModalRapat.id}` : ''}
-                  style={{ fontSize: 12, background: '#f8faf9' }}
+                  value={qrModalRapat.presensiUrl || (typeof window !== 'undefined' ? `${window.location.origin}/presensi/${qrModalRapat.id}` : '')}
+                  style={{ fontSize: 12, background: '#f8faf9', fontWeight: 600, color: '#0f4d3a' }}
                 />
                 <button
                   type="button"
-                  onClick={() => handleCopyLink(qrModalRapat.id)}
+                  onClick={() => handleCopyLink(qrModalRapat.presensiUrl || qrModalRapat.id)}
                   className="btn-secondary"
                   style={{ padding: '8px 12px', fontSize: 12.5, whiteSpace: 'nowrap' }}
                 >
                   {copySuccess ? '✓ Tersalin!' : 'Salin Link'}
                 </button>
+              </div>
+              <div style={{ fontSize: 11, color: '#146c4f', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span>📶</span> Tautan otomatis menggunakan IP Wi-Fi/LAN kantor agar langsung bisa dibuka dari HP.
               </div>
 
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>

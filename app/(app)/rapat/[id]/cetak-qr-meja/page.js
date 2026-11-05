@@ -161,7 +161,7 @@ export default function CetakQrMejaPage() {
         {/* QR Code Container */}
         <div
           style={{
-            margin: '20px auto',
+            margin: '20px auto 14px',
             padding: '20px',
             border: '3px solid #0f4d3a',
             borderRadius: 16,
@@ -176,6 +176,18 @@ export default function CetakQrMejaPage() {
             style={{ width: 280, height: 280, display: 'block' }}
           />
         </div>
+
+        {/* Tautan Manual Alternatif Berbasis IP Wi-Fi */}
+        {data.presensiUrl && (
+          <div style={{ fontFamily: 'sans-serif', margin: '0 auto 16px', maxWidth: 480 }}>
+            <div style={{ fontSize: 11, color: '#5a6b62', fontWeight: 600 }}>
+              Atau ketik tautan di browser HP (pastikan tersambung ke Wi-Fi kantor):
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f4d3a', background: '#f0f4f2', padding: '5px 12px', borderRadius: 6, display: 'inline-block', marginTop: 4, fontFamily: 'monospace' }}>
+              {data.presensiUrl}
+            </div>
+          </div>
+        )}
 
         {/* Instruksi Pengisian */}
         <div style={{ fontFamily: 'sans-serif', maxWidth: 460, margin: '0 auto 20px' }}>

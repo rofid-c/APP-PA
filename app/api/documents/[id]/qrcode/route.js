@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 const QRCode = require('qrcode');
 const { db } = require('../../../../../lib/db');
 const { getSession } = require('../../../../../lib/session');
+const { getExternalBaseUrl } = require('../../../../../lib/network');
 
 function parseValidId(raw) {
   const id = Number(raw);
@@ -19,10 +20,9 @@ export async function GET(request, { params }) {
   const arsip = db.prepare('SELECT id FROM Arsip WHERE id = ?').get(id);
   if (!arsip) return NextResponse.json({ error: 'Arsip tidak ditemukan.' }, { status: 404 });
 
-  // Base URL diambil dari request itu sendiri (host header) supaya otomatis sesuai
-  // alamat/IP yang sedang dipakai mengakses aplikasi -- tidak di-hardcode.
-  const url = new URL(request.url);
-  const targetUrl = `${url.protocol}//${url.host}/cari/${id}`;
+  // Gunakan IP jaringan Wi-Fi/LAN lokal (bukan localhost) supaya HP petugas bisa langsung scan
+  const baseUrl = getExternalBaseUrl(request);
+  const targetUrl = `${baseUrl}/cari/${id}`;
 
   const pngBuffer = await QRCode.toBuffer(targetUrl, {
     type: 'png',
