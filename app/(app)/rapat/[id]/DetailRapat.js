@@ -46,7 +46,6 @@ export default function DetailRapat({ id, role, user }) {
   // Modal Tambah Presensi Manual (dengan TTD canvas)
   const [showManualAbsen, setShowManualAbsen] = useState(false);
   const [manualNama, setManualNama] = useState('');
-  const [manualNip, setManualNip] = useState('');
   const [manualJabatan, setManualJabatan] = useState('');
   const [manualInstansi, setManualInstansi] = useState('PA Gunung Sugih');
   const [manualTtd, setManualTtd] = useState(null);
@@ -221,7 +220,6 @@ export default function DetailRapat({ id, role, user }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nama: manualNama.trim(),
-          nip: manualNip.trim(),
           jabatan: manualJabatan.trim(),
           instansi: manualInstansi.trim(),
           ttdData: manualTtd,
@@ -233,7 +231,6 @@ export default function DetailRapat({ id, role, user }) {
       } else {
         setShowManualAbsen(false);
         setManualNama('');
-        setManualNip('');
         setManualJabatan('');
         setManualTtd(null);
         loadData();
@@ -656,7 +653,6 @@ export default function DetailRapat({ id, role, user }) {
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ fontWeight: 700, color: '#0f4d3a', fontSize: 14 }}>{p.nama}</div>
-                        {p.nip && <div style={{ fontSize: 11.5, color: '#707974', marginTop: 2 }}>NIP: {p.nip}</div>}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ fontWeight: 600, color: '#131e18' }}>{p.jabatan}</div>
@@ -966,30 +962,18 @@ export default function DetailRapat({ id, role, user }) {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>NIP (Opsional)</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="NIP"
-                    value={manualNip}
-                    onChange={(e) => setManualNip(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>
-                    Jabatan <span style={{ color: '#c53030' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="Jabatan"
-                    value={manualJabatan}
-                    onChange={(e) => setManualJabatan(e.target.value)}
-                    required
-                  />
-                </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>
+                  Jabatan / Unit Kerja <span style={{ color: '#c53030' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Contoh: Hakim / Panitera / Kasubbag / Staf"
+                  value={manualJabatan}
+                  onChange={(e) => setManualJabatan(e.target.value)}
+                  required
+                />
               </div>
 
               <div style={{ marginBottom: 14 }}>

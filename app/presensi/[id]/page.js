@@ -3,29 +3,6 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import DigitalSignaturePad from '../../components/DigitalSignaturePad';
 
-const PRESET_JABATAN = [
-  'Ketua',
-  'Wakil Ketua',
-  'Hakim',
-  'Panitera',
-  'Sekretaris',
-  'Panitera Muda Permohonan',
-  'Panitera Muda Gugatan',
-  'Panitera Muda Hukum',
-  'Kasubbag Umum & Keuangan',
-  'Kasubbag Kepegawaian & Ortala',
-  'Kasubbag PTIP',
-  'Panitera Pengganti',
-  'Jurusita',
-  'Jurusita Pengganti',
-  'Analis Perkara Peradilan',
-  'Arsiparis',
-  'Pranata Komputer',
-  'Pengelola Perkara',
-  'PPNPN / Tenaga Honorer',
-  'Mahasiswa Magang',
-];
-
 export default function PresensiPublicPage() {
   const params = useParams();
   const rapatId = params.id;
@@ -36,7 +13,6 @@ export default function PresensiPublicPage() {
 
   // Form State
   const [nama, setNama] = useState('');
-  const [nip, setNip] = useState('');
   const [jabatan, setJabatan] = useState('');
   const [instansi, setInstansi] = useState('Pengadilan Agama Gunung Sugih');
   const [ttdData, setTtdData] = useState(null);
@@ -87,7 +63,6 @@ export default function PresensiPublicPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nama: nama.trim(),
-          nip: nip.trim(),
           jabatan: jabatan.trim(),
           instansi: instansi.trim(),
           ttdData,
@@ -212,7 +187,6 @@ export default function PresensiPublicPage() {
               onClick={() => {
                 setSuccessData(null);
                 setNama('');
-                setNip('');
                 setJabatan('');
                 setTtdData(null);
               }}
@@ -283,54 +257,18 @@ export default function PresensiPublicPage() {
                 />
               </div>
 
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0f4d3a', marginBottom: 5 }}>
-                  NIP <span style={{ fontWeight: 400, color: '#707974', fontSize: 12 }}>(Opsional)</span>
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Nomor Induk Pegawai (bila ada)"
-                  value={nip}
-                  onChange={(e) => setNip(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: 14 }}>
+              <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0f4d3a', marginBottom: 5 }}>
                   Jabatan / Unit Kerja <span style={{ color: '#c53030' }}>*</span>
                 </label>
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="Ketik atau pilih jabatan di bawah"
+                  placeholder="Contoh: Hakim / Panitera / Kasubbag / Staf"
                   value={jabatan}
                   onChange={(e) => setJabatan(e.target.value)}
                   required
                 />
-                {/* Preset Chips */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                  {PRESET_JABATAN.map((j) => (
-                    <button
-                      key={j}
-                      type="button"
-                      onClick={() => setJabatan(j)}
-                      style={{
-                        background: jabatan === j ? '#0f4d3a' : '#f0f4f2',
-                        color: jabatan === j ? '#ffffff' : '#223',
-                        border: '1px solid ' + (jabatan === j ? '#0f4d3a' : '#d2ded8'),
-                        borderRadius: 20,
-                        padding: '4px 10px',
-                        fontSize: 11.5,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      {j}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div style={{ marginBottom: 18 }}>

@@ -184,9 +184,9 @@ export default function CetakDaftarHadirPage() {
           <thead>
             <tr style={{ background: '#f2f2f2', textAlign: 'center' }}>
               <th style={{ border: '1px solid #000', padding: '8px 4px', width: 35 }}>NO</th>
-              <th style={{ border: '1px solid #000', padding: '8px 8px', textAlign: 'left' }}>NAMA LENGKAP & NIP</th>
-              <th style={{ border: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: 200 }}>JABATAN</th>
-              <th style={{ border: '1px solid #000', padding: '8px 4px', width: 90 }}>WAKTU HADIR</th>
+              <th style={{ border: '1px solid #000', padding: '8px 8px', textAlign: 'left' }}>NAMA PESERTA</th>
+              <th style={{ border: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: 220 }}>JABATAN</th>
+              <th style={{ border: '1px solid #000', padding: '8px 4px', width: 100 }}>WAKTU HADIR</th>
               <th style={{ border: '1px solid #000', padding: '8px 6px', width: 140 }}>TANDA TANGAN</th>
             </tr>
           </thead>
@@ -205,7 +205,6 @@ export default function CetakDaftarHadirPage() {
                   </td>
                   <td style={{ border: '1px solid #000', padding: '6px 8px' }}>
                     <div style={{ fontWeight: 700 }}>{p.nama}</div>
-                    {p.nip && <div style={{ fontSize: 10.5, color: '#444' }}>NIP. {p.nip}</div>}
                   </td>
                   <td style={{ border: '1px solid #000', padding: '6px 8px' }}>
                     {p.jabatan}
