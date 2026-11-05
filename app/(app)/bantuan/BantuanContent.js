@@ -3,13 +3,14 @@ const DAFTAR_ISI = [
   { id: 'arsip-perkara', label: '2. Arsip Perkara' },
   { id: 'kesekretariatan', label: '3. Arsip Kesekretariatan' },
   { id: 'laporan', label: '4. Arsip Laporan' },
-  { id: 'dashboard', label: '5. Dashboard' },
-  { id: 'kinerja', label: '6. Capaian Kinerja' },
-  { id: 'pengaturan-master', label: '7. Kelola Data Master' },
-  { id: 'pengguna', label: '8. Kelola Pengguna & Verifikasi Akun' },
-  { id: 'profil', label: '9. Profil Saya' },
-  { id: 'log', label: '10. Log Aktivitas' },
-  { id: 'tips', label: '11. Catatan Tambahan' },
+  { id: 'rapat', label: '5. Rapat & Presensi Digital' },
+  { id: 'dashboard', label: '6. Dashboard' },
+  { id: 'kinerja', label: '7. Capaian Kinerja' },
+  { id: 'pengaturan-master', label: '8. Kelola Data Master' },
+  { id: 'pengguna', label: '9. Kelola Pengguna & Verifikasi Akun' },
+  { id: 'profil', label: '10. Profil Saya' },
+  { id: 'log', label: '11. Log Aktivitas' },
+  { id: 'tips', label: '12. Catatan Tambahan' },
 ];
 
 function Section({ id, title, children }) {
@@ -166,7 +167,37 @@ export default function BantuanContent() {
           <Note>Satu sel, yaitu kombinasi jenis laporan, bulan, dan tahun, hanya dapat memuat satu file. Apabila diunggah ulang pada sel yang sama, file lama akan otomatis digantikan.</Note>
         </Section>
 
-        <Section id="dashboard" title="5. Dashboard">
+        <Section id="rapat" title="5. Rapat Dinas & Presensi Digital">
+          <SubHeading>Membuat Agenda Rapat</SubHeading>
+          <Steps items={[
+            'Buka menu Rapat pada sidebar, lalu tekan tombol "+ Buat Agenda Rapat Baru".',
+            'Isi Nama / Judul Rapat, Tanggal pelaksanaan, Jam Mulai dan Jam Selesai, Tempat / Ruangan, Pimpinan Rapat, Notulis, serta pokok Agenda Bahasan.',
+            'Klik "Simpan & Lanjutkan" untuk membuka halaman kelola rapat.',
+          ]} />
+
+          <SubHeading>Presensi Kehadiran dengan TTD Digital & Barcode/QR</SubHeading>
+          <Bullets items={[
+            'Presensi Mandiri via HP: Klik tombol "QR Presensi" atau buka "Lembar QR Meja" untuk dicetak. Peserta rapat cukup mengarahkan kamera smartphone ke QR Code untuk membuka halaman absensi mandiri tanpa perlu login.',
+            'Peserta mengisi Nama, NIP, Jabatan, dan membubuhkan Tanda Tangan Digital langsung di layar sentuh ponsel menggunakan jari/stylus.',
+            'Setiap presensi yang terkirim akan otomatis menghasilkan kode barcode verifikasi unik serta tersimpan ke daftar hadir rapat.',
+            'Tambah Presensi Manual: Admin atau petugas juga dapat menginput kehadiran peserta langsung di laptop dengan klik "Tambah Presensi Manual" lengkap dengan pad tanda tangan digital.',
+          ]} />
+
+          <SubHeading>Cetak Daftar Hadir Resmi & Lembar QR Meja</SubHeading>
+          <P>
+            Sistem menyediakan tombol <strong>"Cetak Lembar Meja (A4)"</strong> untuk dipajang di meja registrasi atau layar proyektor, serta <strong>"Cetak Daftar Hadir"</strong> yang menghasilkan format resmi dokumen kedinasan Pengadilan Agama lengkap dengan kop surat, tabel peserta, dan tanda tangan digital.
+          </P>
+
+          <SubHeading>Unggah & Unduh Berkas Rangkuman Rapat (PDF)</SubHeading>
+          <Steps items={[
+            'Pada halaman detail rapat, buka kotak "Berkas Rangkuman Rapat (PDF)".',
+            'Pilih berkas notulensi / rangkuman hasil rapat berformat PDF (maksimal 30MB) lalu klik "Upload PDF".',
+            'Berkas PDF yang sudah terunggah dapat dibuka langsung (preview inline), diunduh, diganti, atau dihapus bila diperlukan.',
+            'Tersedia juga kolom "Poin Keputusan / Notulen Ringkas" untuk mencatat ringkasan kesepakatan rapat secara langsung tanpa harus membuka file PDF.',
+          ]} />
+        </Section>
+
+        <Section id="dashboard" title="6. Dashboard">
           <P>Dashboard adalah halaman pertama yang tampil setelah login, dan berisi ringkasan berikut:</P>
           <Bullets items={[
             'Kartu statistik, meliputi total arsip, jumlah yang sedang dipinjam, serta rincian per jenis perkara dan per divisi.',
@@ -177,7 +208,7 @@ export default function BantuanContent() {
           ]} />
         </Section>
 
-        <Section id="kinerja" title="6. Capaian Kinerja">
+        <Section id="kinerja" title="7. Capaian Kinerja">
           <P>
             Menu ini digunakan untuk mencatat capaian kinerja tahunan, sebagai pengganti pencatatan manual
             melalui Excel. Menu ini hanya dapat diakses oleh Admin, dan terdiri atas dua bagian: <strong>Kelola

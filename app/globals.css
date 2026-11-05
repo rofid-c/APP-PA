@@ -281,7 +281,8 @@ input, select { font-family: inherit; }
   gap: 10px;
 }
 
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(15, 30, 25, 0.45);
@@ -292,7 +293,8 @@ input, select { font-family: inherit; }
   padding: 20px;
 }
 
-.modal-box {
+.modal-box,
+.modal-card {
   background: white;
   border-radius: 14px;
   padding: 24px;

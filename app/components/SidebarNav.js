@@ -94,6 +94,15 @@ export default function SidebarNav({ role, onNavigate }) {
         <span className="label">Laporan & Kinerja</span>
       </a>
 
+      <a
+        href="/rapat"
+        className={pathname.startsWith('/rapat') ? 'active' : ''}
+        onClick={handleClick}
+      >
+        <span>👥</span>
+        <span className="label">Rapat</span>
+      </a>
+
       {role !== 'staf_umum' && (
         <a href="/log-aktivitas" className={isActive('/log-aktivitas') ? 'active' : ''} onClick={handleClick}>
           <span>📋</span>

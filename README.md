@@ -78,8 +78,8 @@ Dokumen ini disusun sebagai acuan komprehensif rancangan antarmuka (UI/UX) dan s
        * `– Umum & Keuangan` (Sub-folder: `📁 Surat Masuk`, `📁 Surat Keluar`, `📁 BMN/Pengadaan`, dll.)
        * `– PTIP` (Sub-folder: `📁 Aplikasi & Website`, `📁 Jaringan & Server`, `📁 Laporan TI`)
      - Mengklik salah satu sub-folder langsung membuka filter seluruh arsip yang termasuk di dalamnya.
-  4. `📊 Arsip Laporan` -> `/laporan`
-  5. `📈 Capaian Kinerja` -> `/kinerja` *(Khusus Admin)*
+  4. `📊 Arsip Laporan & Kinerja` -> `/laporan`
+  5. `👥 Rapat & Presensi Digital` -> `/rapat` (Presensi QR/Barcode, TTD Digital, cetak daftar hadir resmi, dan unggah rangkuman PDF)
   6. `📋 Log Aktivitas` -> `/log-aktivitas` *(Admin & Petugas)*
   7. `⚙️ Pengaturan` -> `/pengaturan` (Dilengkapi **Badge Pill Merah** angka antrean akun pending untuk Admin)
   8. `❓ Bantuan` -> `/bantuan` *(Khusus Admin)*
