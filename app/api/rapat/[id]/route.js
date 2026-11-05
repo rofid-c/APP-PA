@@ -146,6 +146,23 @@ export async function DELETE(request, { params }) {
   db.prepare('DELETE FROM PresensiRapat WHERE rapatId = ?').run(id);
   db.prepare('DELETE FROM Rapat WHERE id = ?').run(id);
 
+  // Sinkronkan urutan auto-increment ID agar nomor tidak terus melompat jika data dihapus
+  try {
+    const statRapat = db.prepare('SELECT MAX(id) as maxId, COUNT(*) as c FROM Rapat').get();
+    if (!statRapat || statRapat.c === 0 || !statRapat.maxId) {
+      db.prepare("DELETE FROM sqlite_sequence WHERE name = 'Rapat'").run();
+    } else {
+      db.prepare("UPDATE sqlite_sequence SET seq = ? WHERE name = 'Rapat'").run(statRapat.maxId);
+    }
+
+    const sisaPresensi = db.prepare('SELECT COUNT(*) as c FROM PresensiRapat').get().c;
+    if (sisaPresensi === 0) {
+      db.prepare("DELETE FROM sqlite_sequence WHERE name = 'PresensiRapat'").run();
+    }
+  } catch (e) {
+    console.warn('Gagal sinkronisasi sequence:', e.message);
+  }
+
   db.prepare('INSERT INTO LogAktivitas (aksi, deskripsi, userId) VALUES (?, ?, ?)').run(
     'hapus_rapat',
     `${session.namaLengkap} menghapus agenda rapat "${existing.judul}"`,
