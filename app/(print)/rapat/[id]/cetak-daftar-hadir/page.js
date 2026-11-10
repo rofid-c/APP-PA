@@ -175,23 +175,20 @@ export default function CetakDaftarHadirPage() {
         </div>
       </div>
 
-      {/* HALAMAN 1: Kop Surat + Metadata + Tabel Baris 1-20 */}
+      {/* HALAMAN 1: Kop Surat + Judul dalam Kotak Tabel Bergaris + Metadata + Tabel Baris 1-20 */}
       <div className="paper-sheet">
-        {/* GARIS ATAS KOP SURAT (persis template Word) */}
-        <div className="kop-garis-atas"></div>
-
-        {/* KOP SURAT MAHKAMAH AGUNG (Tabel 2 Kolom + Garis Bawah Tebal) */}
-        <table className="kop-table">
+        {/* KOP SURAT & JUDUL DAFTAR HADIR (Tabel Tertutup Garis Atas, Bawah, Kiri, Kanan Persis Template Word) */}
+        <table className="kop-box-table">
           <tbody>
-            <tr>
-              <td style={{ width: 85, verticalAlign: 'middle', textAlign: 'center', padding: '0 8px 0 0' }}>
+            <tr className="kop-header-row">
+              <td style={{ width: 85, verticalAlign: 'middle', textAlign: 'center', padding: '6px 8px 6px 12px' }}>
                 <img
                   src="/logo-pa.svg"
                   alt="Logo Mahkamah Agung"
                   style={{ width: 75, height: 90, objectFit: 'contain', display: 'block', margin: '0 auto' }}
                 />
               </td>
-              <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '0' }}>
+              <td style={{ verticalAlign: 'middle', textAlign: 'center', padding: '6px 16px 6px 0' }}>
                 <div style={{ fontSize: '12pt', fontWeight: 400 }}>
                   MAHKAMAH AGUNG REPUBLIK INDONESIA
                 </div>
@@ -209,25 +206,13 @@ export default function CetakDaftarHadirPage() {
                 </div>
               </td>
             </tr>
+            <tr className="kop-title-row">
+              <td colSpan={2} style={{ textAlign: 'center', padding: '5px 4px', fontWeight: 700, fontSize: '11.5pt', letterSpacing: '0.5px' }}>
+                DAFTAR HADIR
+              </td>
+            </tr>
           </tbody>
         </table>
-
-        {/* GARIS BAWAH KOP (Tebal atas, tipis bawah — persis template Word) */}
-        <div className="kop-garis"></div>
-
-        {/* JUDUL DAFTAR HADIR (Di Tengah Bergaris Bawah Sesuai Template Word) */}
-        <div style={{ textAlign: 'center', marginTop: 14, marginBottom: 12 }}>
-          <span
-            style={{
-              fontSize: '11.5pt',
-              fontWeight: 700,
-              textDecoration: 'underline',
-              letterSpacing: '0.5px',
-            }}
-          >
-            DAFTAR HADIR
-          </span>
-        </div>
 
         {/* METADATA KEGIATAN PERSIS FORMAT WORD */}
         <table className="meta-table">
@@ -361,30 +346,22 @@ export default function CetakDaftarHadirPage() {
           margin-top: 24px;
         }
 
-        .kop-table {
+        /* Kotak Tabel Kop Surat & DAFTAR HADIR (Tertutup Garis Atas, Bawah, Kiri, Kanan Persis Template Word) */
+        .kop-box-table {
           width: 100%;
           border-collapse: collapse;
-          border: none;
-          margin-bottom: 4px;
+          border: 1px solid #000000;
+          margin-bottom: 12px;
         }
-        .kop-table td {
+        .kop-box-table td {
           border: none;
+        }
+        .kop-header-row td {
           line-height: 1.25;
         }
-
-        /* Garis atas kop surat (persis template Word) */
-        .kop-garis-atas {
-          border-top: 3px solid #000000;
-          margin-bottom: 8px;
-        }
-
-        /* Garis bawah kop surat: tebal atas, tipis bawah (persis template Word) */
-        .kop-garis {
-          border-top: 3px solid #000000;
-          border-bottom: 1px solid #000000;
-          margin-top: 5px;
-          margin-bottom: 0;
-          padding-bottom: 2px;
+        .kop-title-row td {
+          border-top: 1px solid #000000;
+          background: #ffffff;
         }
 
         .meta-table {
@@ -407,7 +384,7 @@ export default function CetakDaftarHadirPage() {
 
         .daftar-tabel th,
         .daftar-tabel td {
-          border: 1px solid #222222;
+          border: 1px solid #000000;
           vertical-align: middle;
         }
 
