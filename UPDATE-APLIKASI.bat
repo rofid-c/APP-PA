@@ -23,6 +23,12 @@ echo.
 :: Tutup server lama jika sedang berjalan agar port 3000 bebas
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :3000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>nul
 
+:: Amankan database dan berkas lokal ke folder cadangan (backup otomatis)
+if exist "scripts\auto-backup.js" (
+    call node scripts/auto-backup.js
+    echo.
+)
+
 :: 1. Cek apakah Git terpasang di komputer ini
 where git >nul 2>nul
 if %errorlevel% neq 0 goto UNDUH_POWERSHELL
