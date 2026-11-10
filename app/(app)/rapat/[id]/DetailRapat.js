@@ -37,11 +37,25 @@ export default function DetailRapat({ id, role, user }) {
   const [savingCatatan, setSavingCatatan] = useState(false);
   const [catatanSaved, setCatatanSaved] = useState(false);
 
-  // Upload PDF Rangkuman
-  const [pdfFile, setPdfFile] = useState(null);
+  // Upload PDF Rangkuman / Notulen (Mendukung Lebih Dari 1 File)
+  const [pdfFiles, setPdfFiles] = useState([]);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Upload PDF Undangan (Mendukung Lebih Dari 1 File)
+  const [undanganFiles, setUndanganFiles] = useState([]);
+  const [uploadingUndangan, setUploadingUndangan] = useState(false);
+  const [undanganError, setUndanganError] = useState('');
+  const fileUndanganInputRef = useRef(null);
+
+  // Dokumentasi Rapat (Foto)
+  const [fotoFiles, setFotoFiles] = useState([]);
+  const [fotoCaption, setFotoCaption] = useState('');
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [fotoError, setFotoError] = useState('');
+  const fotoInputRef = useRef(null);
+  const [previewFotoModal, setPreviewFotoModal] = useState(null);
 
   // Modal Tambah Presensi Manual (dengan TTD canvas)
   const [showManualAbsen, setShowManualAbsen] = useState(false);
@@ -144,25 +158,24 @@ export default function DetailRapat({ id, role, user }) {
     }
   }
 
-  // Handle Upload PDF Rangkuman
+  // Handle Upload PDF Rangkuman / Notulen (Mendukung Banyak File)
   async function handleUploadPdf(e) {
     e.preventDefault();
     setPdfError('');
-    if (!pdfFile) {
-      setPdfError('Pilih berkas PDF rangkuman terlebih dahulu.');
-      return;
-    }
-    if (pdfFile.type !== 'application/pdf') {
-      setPdfError('Hanya berkas format PDF yang diperbolehkan.');
+    if (!pdfFiles || pdfFiles.length === 0) {
+      setPdfError('Pilih minimal satu berkas PDF notulen.');
       return;
     }
 
     setUploadingPdf(true);
     const fd = new FormData();
-    fd.append('file', pdfFile);
+    fd.append('kategori', 'notulen');
+    for (let i = 0; i < pdfFiles.length; i++) {
+      fd.append('files', pdfFiles[i]);
+    }
 
     try {
-      const res = await fetch(`/api/rapat/${id}/upload-rangkuman`, {
+      const res = await fetch(`/api/rapat/${id}/upload-berkas`, {
         method: 'POST',
         body: fd,
       });
@@ -170,7 +183,7 @@ export default function DetailRapat({ id, role, user }) {
       if (!res.ok) {
         setPdfError(resData.error || 'Gagal mengunggah berkas.');
       } else {
-        setPdfFile(null);
+        setPdfFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = '';
         loadData();
       }
@@ -181,15 +194,108 @@ export default function DetailRapat({ id, role, user }) {
     }
   }
 
-  // Handle Hapus PDF Rangkuman
-  async function handleDeletePdf() {
-    if (!confirm('Hapus berkas PDF rangkuman rapat ini?')) return;
+  // Handle Upload PDF Undangan (Mendukung Banyak File)
+  async function handleUploadUndangan(e) {
+    e.preventDefault();
+    setUndanganError('');
+    if (!undanganFiles || undanganFiles.length === 0) {
+      setUndanganError('Pilih minimal satu berkas PDF undangan.');
+      return;
+    }
+
+    setUploadingUndangan(true);
+    const fd = new FormData();
+    fd.append('kategori', 'undangan');
+    for (let i = 0; i < undanganFiles.length; i++) {
+      fd.append('files', undanganFiles[i]);
+    }
+
     try {
-      const res = await fetch(`/api/rapat/${id}/rangkuman`, { method: 'DELETE' });
+      const res = await fetch(`/api/rapat/${id}/upload-berkas`, {
+        method: 'POST',
+        body: fd,
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        setUndanganError(resData.error || 'Gagal mengunggah berkas undangan.');
+      } else {
+        setUndanganFiles([]);
+        if (fileUndanganInputRef.current) fileUndanganInputRef.current.value = '';
+        loadData();
+      }
+    } catch {
+      setUndanganError('Terjadi kesalahan jaringan.');
+    } finally {
+      setUploadingUndangan(false);
+    }
+  }
+
+  // Handle Hapus Berkas PDF (Bisa Hapus Satuan)
+  async function handleDeleteBerkas(berkasId, fileName) {
+    if (!confirm(`Hapus berkas "${fileName || 'ini'}"?`)) return;
+    try {
+      const res = await fetch(`/api/rapat/${id}/berkas/${berkasId}`, { method: 'DELETE' });
       if (res.ok) {
         loadData();
       } else {
         alert('Gagal menghapus berkas.');
+      }
+    } catch {
+      alert('Gagal menghubungi server.');
+    }
+  }
+
+  // Handle Upload Foto Dokumentasi
+  async function handleUploadFoto(e) {
+    e.preventDefault();
+    setFotoError('');
+    if (!fotoFiles || fotoFiles.length === 0) {
+      setFotoError('Pilih minimal satu berkas foto dokumentasi.');
+      return;
+    }
+
+    setUploadingFoto(true);
+    const fd = new FormData();
+    for (let i = 0; i < fotoFiles.length; i++) {
+      fd.append('files', fotoFiles[i]);
+    }
+    if (fotoCaption.trim()) {
+      fd.append('caption', fotoCaption.trim());
+    }
+
+    try {
+      const res = await fetch(`/api/rapat/${id}/dokumentasi`, {
+        method: 'POST',
+        body: fd,
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        setFotoError(resData.error || 'Gagal mengunggah foto.');
+      } else {
+        setFotoFiles([]);
+        setFotoCaption('');
+        if (fotoInputRef.current) fotoInputRef.current.value = '';
+        loadData();
+      }
+    } catch {
+      setFotoError('Terjadi kesalahan jaringan saat mengunggah foto.');
+    } finally {
+      setUploadingFoto(false);
+    }
+  }
+
+  // Handle Hapus Foto Dokumentasi
+  async function handleDeleteFoto(fotoId, fileName) {
+    if (!confirm(`Hapus foto dokumentasi "${fileName || 'ini'}"?`)) return;
+    try {
+      const res = await fetch(`/api/rapat/${id}/dokumentasi/${fotoId}`, { method: 'DELETE' });
+      if (res.ok) {
+        if (previewFotoModal && previewFotoModal.id === fotoId) {
+          setPreviewFotoModal(null);
+        }
+        loadData();
+      } else {
+        alert('Gagal menghapus foto dokumentasi.');
       }
     } catch {
       alert('Gagal menghubungi server.');
@@ -292,6 +398,9 @@ export default function DetailRapat({ id, role, user }) {
       </div>
     );
   }
+
+  const listUndangan = (data.berkas || []).filter((b) => b.kategori === 'undangan');
+  const listNotulen = (data.berkas || []).filter((b) => b.kategori === 'notulen');
 
   return (
     <div>
@@ -423,121 +532,500 @@ export default function DetailRapat({ id, role, user }) {
             </div>
           </div>
 
-          {/* KARTU 2: UPLOAD & ARSIP RANGKUMAN PDF */}
+          {/* KARTU 2: BERKAS & DOKUMEN RAPAT (UNDANGAN & NOTULEN PDF - MULTI FILE) */}
           <div className="card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: '#0f4d3a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>📄</span> Berkas Rangkuman Rapat (PDF)
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#0f4d3a', marginBottom: 14, borderBottom: '1px solid var(--border)', paddingBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📁</span> Berkas & Dokumen Rapat (PDF)
               </div>
-              {data.fileRangkumanPath ? (
-                <span style={{ background: '#e6f7ee', color: '#136b4e', padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
-                  ✓ Terunggah
-                </span>
+              <span style={{ fontSize: 11.5, color: '#55655d', fontWeight: 600 }}>
+                Bisa upload &gt; 1 berkas per kategori
+              </span>
+            </div>
+
+            {/* SEKSI A: UNDANGAN RAPAT (PDF) */}
+            <div style={{ marginBottom: 20, paddingBottom: 18, borderBottom: '1px dashed #d2ded8' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#131e18', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📨</span> Undangan Rapat (PDF)
+                </div>
+                {listUndangan.length > 0 ? (
+                  <span style={{ background: '#e6f7ee', color: '#136b4e', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
+                    ✓ {listUndangan.length} Berkas
+                  </span>
+                ) : (
+                  <span style={{ background: '#f4f6f5', color: '#8a978f', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
+                    Belum Ada
+                  </span>
+                )}
+              </div>
+
+              {/* Daftar Berkas Undangan Terunggah */}
+              {listUndangan.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {listUndangan.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: '#f8faf9',
+                        border: '1px solid #e2e6e4',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 800, flexShrink: 0 }}>
+                          PDF
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: '#131e18', wordBreak: 'break-all' }}>
+                            {item.fileName}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#707974', marginTop: 2 }}>
+                            {formatUkuran(item.fileSize)} {item.createdAt ? `• ${new Date(item.createdAt).toLocaleDateString('id-ID')}` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <a
+                          href={`/api/rapat/${id}/berkas/${item.id}?mode=view`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-primary"
+                          style={{ padding: '5px 10px', fontSize: 11.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <span>👁️</span> Buka PDF
+                        </a>
+                        <a
+                          href={`/api/rapat/${id}/berkas/${item.id}?mode=download`}
+                          className="btn-secondary"
+                          style={{ padding: '5px 10px', fontSize: 11.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <span>📥</span> Unduh
+                        </a>
+                        {bisaKelola && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBerkas(item.id, item.fileName)}
+                            className="btn-danger"
+                            style={{ padding: '5px 8px', fontSize: 11.5 }}
+                          >
+                            Hapus
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <span style={{ background: '#f4f6f5', color: '#8a978f', padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
-                  Belum Ada
-                </span>
+                <div style={{ textAlign: 'center', padding: '12px', background: '#fafbfa', border: '1px dashed #d2ded8', borderRadius: 8, marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#707974' }}>
+                    Belum ada berkas PDF undangan rapat.
+                  </div>
+                </div>
+              )}
+
+              {/* Form Upload Undangan (Multi-file) */}
+              {bisaKelola && (
+                <form onSubmit={handleUploadUndangan}>
+                  {undanganError && (
+                    <div style={{ background: '#fff0f0', color: '#c53030', fontSize: 11.5, padding: '6px 8px', borderRadius: 6, marginBottom: 6 }}>
+                      ⚠️ {undanganError}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      ref={fileUndanganInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      onChange={(e) => setUndanganFiles(Array.from(e.target.files || []))}
+                      className="input-field"
+                      style={{ padding: '6px 8px', fontSize: 11.5, flex: 1, minWidth: 200 }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={uploadingUndangan || undanganFiles.length === 0}
+                      className="btn-primary"
+                      style={{ padding: '6px 12px', fontSize: 12, whiteSpace: 'nowrap' }}
+                    >
+                      {uploadingUndangan
+                        ? 'Mengunggah...'
+                        : undanganFiles.length > 1
+                        ? `Upload ${undanganFiles.length} Undangan`
+                        : 'Upload Undangan'}
+                    </button>
+                  </div>
+                  {undanganFiles.length > 0 && (
+                    <div style={{ fontSize: 11, color: '#0f4d3a', fontWeight: 600, marginTop: 4 }}>
+                      ✓ {undanganFiles.length} berkas dipilih: {undanganFiles.map((f) => f.name).join(', ')}
+                    </div>
+                  )}
+                </form>
               )}
             </div>
 
-            {data.fileRangkumanPath ? (
-              /* DOKUMEN SUDAH TERUNGGAH */
-              <div style={{ background: '#f8faf9', border: '1px solid #e2e6e4', borderRadius: 10, padding: '16px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                    PDF
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#131e18', wordBreak: 'break-all' }}>
-                      {data.fileRangkumanName || 'Rangkuman Rapat.pdf'}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#707974', marginTop: 2 }}>
-                      Ukuran: {formatUkuran(data.fileRangkumanSize)}
-                    </div>
-                  </div>
+            {/* SEKSI B: NOTULEN / RANGKUMAN RAPAT (PDF) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#131e18', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📄</span> Notulen / Rangkuman Rapat (PDF)
                 </div>
+                {listNotulen.length > 0 ? (
+                  <span style={{ background: '#e6f7ee', color: '#136b4e', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
+                    ✓ {listNotulen.length} Berkas
+                  </span>
+                ) : (
+                  <span style={{ background: '#f4f6f5', color: '#8a978f', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
+                    Belum Ada
+                  </span>
+                )}
+              </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <a
-                    href={`/api/rapat/${id}/rangkuman?mode=view`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-primary"
-                    style={{ padding: '8px 14px', fontSize: 12.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <span>👁️</span> Buka / Lihat PDF
-                  </a>
-
-                  <a
-                    href={`/api/rapat/${id}/rangkuman?mode=download`}
-                    className="btn-secondary"
-                    style={{ padding: '8px 14px', fontSize: 12.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <span>📥</span> Unduh Berkas
-                  </a>
-
-                  {bisaKelola && (
-                    <button
-                      type="button"
-                      onClick={handleDeletePdf}
-                      className="btn-danger"
-                      style={{ padding: '8px 12px', fontSize: 12.5 }}
+              {/* Daftar Berkas Notulen Terunggah */}
+              {listNotulen.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {listNotulen.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: '#f8faf9',
+                        border: '1px solid #e2e6e4',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        flexWrap: 'wrap',
+                      }}
                     >
-                      Hapus PDF
-                    </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 6, background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 800, flexShrink: 0 }}>
+                          PDF
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: '#131e18', wordBreak: 'break-all' }}>
+                            {item.fileName}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#707974', marginTop: 2 }}>
+                            {formatUkuran(item.fileSize)} {item.createdAt ? `• ${new Date(item.createdAt).toLocaleDateString('id-ID')}` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <a
+                          href={`/api/rapat/${id}/berkas/${item.id}?mode=view`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-primary"
+                          style={{ padding: '5px 10px', fontSize: 11.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <span>👁️</span> Buka PDF
+                        </a>
+                        <a
+                          href={`/api/rapat/${id}/berkas/${item.id}?mode=download`}
+                          className="btn-secondary"
+                          style={{ padding: '5px 10px', fontSize: 11.5, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <span>📥</span> Unduh
+                        </a>
+                        {bisaKelola && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBerkas(item.id, item.fileName)}
+                            className="btn-danger"
+                            style={{ padding: '5px 8px', fontSize: 11.5 }}
+                          >
+                            Hapus
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px', background: '#fafbfa', border: '1px dashed #d2ded8', borderRadius: 8, marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#707974' }}>
+                    Belum ada berkas PDF notulen / rangkuman hasil rapat.
+                  </div>
+                </div>
+              )}
+
+              {/* Form Upload Notulen (Multi-file) */}
+              {bisaKelola && (
+                <form onSubmit={handleUploadPdf}>
+                  {pdfError && (
+                    <div style={{ background: '#fff0f0', color: '#c53030', fontSize: 11.5, padding: '6px 8px', borderRadius: 6, marginBottom: 6 }}>
+                      ⚠️ {pdfError}
+                    </div>
                   )}
-                </div>
-              </div>
-            ) : (
-              /* BELUM ADA DOKUMEN */
-              <div style={{ textAlign: 'center', padding: '24px 14px', background: '#fafbfa', border: '1.5px dashed #d2ded8', borderRadius: 10, marginBottom: 16 }}>
-                <div style={{ fontSize: 32, marginBottom: 6 }}>📑</div>
-                <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0f4d3a', marginBottom: 4 }}>
-                  Belum Ada Berkas Rangkuman Rapat
-                </div>
-                <div style={{ fontSize: 12, color: '#707974' }}>
-                  Unggah berkas notulen / rangkuman hasil rapat dalam format PDF (maks. 30MB).
-                </div>
-              </div>
-            )}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      onChange={(e) => setPdfFiles(Array.from(e.target.files || []))}
+                      className="input-field"
+                      style={{ padding: '6px 8px', fontSize: 11.5, flex: 1, minWidth: 200 }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={uploadingPdf || pdfFiles.length === 0}
+                      className="btn-primary"
+                      style={{ padding: '6px 12px', fontSize: 12, whiteSpace: 'nowrap' }}
+                    >
+                      {uploadingPdf
+                        ? 'Mengunggah...'
+                        : pdfFiles.length > 1
+                        ? `Upload ${pdfFiles.length} Notulen`
+                        : 'Upload Notulen'}
+                    </button>
+                  </div>
+                  {pdfFiles.length > 0 && (
+                    <div style={{ fontSize: 11, color: '#0f4d3a', fontWeight: 600, marginTop: 4 }}>
+                      ✓ {pdfFiles.length} berkas dipilih: {pdfFiles.map((f) => f.name).join(', ')}
+                    </div>
+                  )}
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
 
-            {/* Form Unggah / Ganti PDF */}
+        {/* ROW 2: FOTO DOKUMENTASI KEGIATAN RAPAT */}
+        <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 24 }}>
+          <div
+            style={{
+              padding: '16px 20px',
+              background: '#f8faf9',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: '#0f4d3a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📸</span> FOTO DOKUMENTASI KEGIATAN RAPAT
+              </div>
+              <span
+                style={{
+                  background: '#e6f7ee',
+                  color: '#136b4e',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: '3px 10px',
+                  borderRadius: 20,
+                }}
+              >
+                {data.dokumentasi?.length || 0} Foto
+              </span>
+            </div>
+          </div>
+
+          <div style={{ padding: '20px' }}>
+            {/* Form Upload Foto */}
             {bisaKelola && (
-              <form onSubmit={handleUploadPdf} style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0f4d3a', marginBottom: 6 }}>
-                  {data.fileRangkumanPath ? 'Ganti dengan File PDF Baru:' : 'Unggah File PDF Notulen:'}
+              <form
+                onSubmit={handleUploadFoto}
+                style={{
+                  background: '#fcfdfd',
+                  border: '1px solid #dbe4e0',
+                  borderRadius: 10,
+                  padding: '16px',
+                  marginBottom: 20,
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0f4d3a', marginBottom: 10 }}>
+                  + Unggah Foto Dokumentasi Baru:
                 </div>
 
-                {pdfError && (
-                  <div style={{ background: '#fff0f0', color: '#c53030', fontSize: 12, padding: '8px 10px', borderRadius: 6, marginBottom: 8 }}>
-                    ⚠️ {pdfError}
+                {fotoError && (
+                  <div style={{ background: '#fff0f0', color: '#c53030', fontSize: 12, padding: '8px 10px', borderRadius: 6, marginBottom: 10 }}>
+                    ⚠️ {fotoError}
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setPdfFile(e.target.files[0] || null)}
-                    className="input-field"
-                    style={{ padding: '7px 10px', fontSize: 12 }}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, marginBottom: 10 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#445', marginBottom: 4 }}>
+                      Pilih Foto (Bisa pilih beberapa sekaligus):
+                    </label>
+                    <input
+                      ref={fotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => setFotoFiles(Array.from(e.target.files || []))}
+                      className="input-field"
+                      style={{ padding: '7px 10px', fontSize: 12 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#445', marginBottom: 4 }}>
+                      Keterangan / Caption Foto (Opsional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Suasana pembukaan rapat..."
+                      value={fotoCaption}
+                      onChange={(e) => setFotoCaption(e.target.value)}
+                      className="input-field"
+                      style={{ padding: '7px 10px', fontSize: 12 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
+                  {fotoFiles.length > 0 && (
+                    <span style={{ fontSize: 12, color: '#136b4e', fontWeight: 600 }}>
+                      ✓ {fotoFiles.length} foto siap diunggah
+                    </span>
+                  )}
                   <button
                     type="submit"
-                    disabled={uploadingPdf || !pdfFile}
+                    disabled={uploadingFoto || fotoFiles.length === 0}
                     className="btn-primary"
-                    style={{ padding: '8px 14px', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                    style={{ padding: '8px 16px', fontSize: 13 }}
                   >
-                    {uploadingPdf ? 'Mengunggah...' : 'Upload PDF'}
+                    {uploadingFoto ? 'Mengunggah Foto...' : 'Unggah Foto Dokumentasi'}
                   </button>
                 </div>
               </form>
             )}
+
+            {/* Gallery Foto */}
+            {(!data.dokumentasi || data.dokumentasi.length === 0) ? (
+              <div style={{ textAlign: 'center', padding: '36px 16px', background: '#fafbfa', border: '1.5px dashed #d2ded8', borderRadius: 10 }}>
+                <div style={{ fontSize: 36, marginBottom: 6 }}>🖼️</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#0f4d3a', marginBottom: 4 }}>
+                  Belum Ada Foto Dokumentasi
+                </div>
+                <div style={{ fontSize: 12.5, color: '#707974' }}>
+                  Unggah foto suasana atau jalannya kegiatan rapat untuk melengkapi arsip kedinasan.
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+                  gap: 16,
+                }}
+              >
+                {data.dokumentasi.map((foto) => (
+                  <div
+                    key={foto.id}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #e2e6e4',
+                      borderRadius: 10,
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <div
+                      onClick={() => setPreviewFotoModal(foto)}
+                      style={{
+                        position: 'relative',
+                        height: 160,
+                        background: '#1a221f',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                      }}
+                      title="Klik untuk memperbesar foto"
+                    >
+                      <img
+                        src={`/api/rapat/${id}/dokumentasi/${foto.id}?mode=view`}
+                        alt={foto.caption || foto.fileName}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          transition: 'transform 0.2s',
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          background: 'rgba(0,0,0,0.65)',
+                          color: 'white',
+                          borderRadius: 4,
+                          padding: '2px 6px',
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                        }}
+                      >
+                        🔍 Perbesar
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div style={{ marginBottom: 8 }}>
+                        {foto.caption ? (
+                          <div style={{ fontWeight: 700, fontSize: 12.5, color: '#131e18', marginBottom: 2 }}>
+                            {foto.caption}
+                          </div>
+                        ) : null}
+                        <div style={{ fontSize: 11, color: '#707974', wordBreak: 'break-all' }}>
+                          {foto.fileName}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: '#8a978f', marginTop: 2 }}>
+                          {formatUkuran(foto.fileSize)} • {foto.createdAt?.slice(0, 10)}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 6, borderTop: '1px solid #f0f2f1', paddingTop: 8 }}>
+                        <a
+                          href={`/api/rapat/${id}/dokumentasi/${foto.id}?mode=download`}
+                          className="btn-secondary"
+                          style={{
+                            flex: 1,
+                            padding: '5px 8px',
+                            fontSize: 11.5,
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                            display: 'inline-block',
+                          }}
+                        >
+                          📥 Unduh
+                        </a>
+                        {bisaKelola && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFoto(foto.id, foto.fileName)}
+                            className="btn-danger"
+                            style={{ padding: '5px 10px', fontSize: 11.5 }}
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ROW 2: ABSENSI & PRESENSI DIGITAL */}
+        {/* ROW 3: ABSENSI & PRESENSI DIGITAL */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {/* Header Card Absensi */}
           <div
@@ -571,6 +1059,16 @@ export default function DetailRapat({ id, role, user }) {
             </div>
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <a
+                href={`/rapat/${id}/cetak-daftar-hadir`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary"
+                style={{ padding: '7px 14px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none', background: '#0f4d3a' }}
+              >
+                <span>📄</span> Cetak PDF Daftar Hadir
+              </a>
+
               <button
                 type="button"
                 onClick={() => setShowQrModal(true)}
@@ -993,6 +1491,78 @@ export default function DetailRapat({ id, role, user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL LIGHTBOX ZOOM FOTO DOKUMENTASI */}
+      {previewFotoModal && (
+        <div className="modal-backdrop" onClick={() => setPreviewFotoModal(null)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: 780, padding: '20px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: '#0f4d3a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📸</span> Dokumentasi: {previewFotoModal.caption || previewFotoModal.fileName}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewFotoModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: 20, color: '#707974', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: '#0d1310',
+                borderRadius: 8,
+                padding: '8px',
+                textAlign: 'center',
+                maxHeight: '65vh',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <img
+                src={`/api/rapat/${id}/dokumentasi/${previewFotoModal.id}?mode=view`}
+                alt={previewFotoModal.caption || previewFotoModal.fileName}
+                style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 4 }}
+              />
+            </div>
+
+            {previewFotoModal.caption && (
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#131e18', marginBottom: 6 }}>
+                "{previewFotoModal.caption}"
+              </div>
+            )}
+
+            <div style={{ fontSize: 12, color: '#707974', marginBottom: 16 }}>
+              Berkas: {previewFotoModal.fileName} • Ukuran: {formatUkuran(previewFotoModal.fileSize)}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <a
+                href={`/api/rapat/${id}/dokumentasi/${previewFotoModal.id}?mode=download`}
+                className="btn-primary"
+                style={{ textDecoration: 'none', padding: '8px 16px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <span>📥</span> Unduh Foto Ukuran Penuh
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewFotoModal(null)}
+                className="btn-secondary"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

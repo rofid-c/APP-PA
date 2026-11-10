@@ -37,7 +37,10 @@ export async function GET(request) {
   const rows = db
     .prepare(
       `SELECT Rapat.*, User.namaLengkap as pembuatNama,
-       (SELECT COUNT(*) FROM PresensiRapat WHERE PresensiRapat.rapatId = Rapat.id) as jumlahPresensi
+       (SELECT COUNT(*) FROM PresensiRapat WHERE PresensiRapat.rapatId = Rapat.id) as jumlahPresensi,
+       (SELECT COUNT(*) FROM DokumentasiRapat WHERE DokumentasiRapat.rapatId = Rapat.id) as jumlahDokumentasi,
+       (SELECT COUNT(*) FROM BerkasRapat WHERE BerkasRapat.rapatId = Rapat.id AND BerkasRapat.kategori = 'undangan') as jumlahUndangan,
+       (SELECT COUNT(*) FROM BerkasRapat WHERE BerkasRapat.rapatId = Rapat.id AND BerkasRapat.kategori = 'notulen') as jumlahNotulen
        FROM Rapat
        LEFT JOIN User ON Rapat.createdBy = User.id
        ${where}

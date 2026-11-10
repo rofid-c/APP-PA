@@ -196,7 +196,7 @@ export default function CetakQrMejaPage() {
           </div>
           <p style={{ fontSize: 13, color: '#445', lineHeight: 1.5, margin: 0 }}>
             1. Buka kamera ponsel Anda dan arahkan ke QR Code di atas.<br />
-            2. Isi Nama, NIP, dan Jabatan Anda.<br />
+            2. Isi Nama dan Jabatan Anda.<br />
             3. Bubuhkan Tanda Tangan Digital pada layar ponsel, lalu klik Kirim.
           </p>
         </div>

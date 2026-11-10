@@ -39,13 +39,25 @@ export async function GET(request, { params }) {
     )
     .all(id);
 
+  const dokumentasi = db
+    .prepare('SELECT * FROM DokumentasiRapat WHERE rapatId = ? ORDER BY id ASC')
+    .all(id);
+
+  const berkas = db
+    .prepare('SELECT * FROM BerkasRapat WHERE rapatId = ? ORDER BY id ASC')
+    .all(id);
+
   const baseUrl = getExternalBaseUrl(request);
 
   return NextResponse.json({
     data: {
       ...rapat,
       presensi,
+      dokumentasi,
+      berkas,
       jumlahPresensi: presensi.length,
+      jumlahDokumentasi: dokumentasi.length,
+      jumlahBerkas: berkas.length,
       presensiUrl: `${baseUrl}/presensi/${id}`,
       networkBaseUrl: baseUrl,
     },
@@ -141,6 +153,42 @@ export async function DELETE(request, { params }) {
       console.warn('Gagal menghapus file fisik rangkuman rapat:', e.message);
     }
   }
+
+  // Hapus berkas undangan fisik jika ada
+  if (existing.fileUndanganPath) {
+    const absPath = path.join(UPLOAD_DIR, existing.fileUndanganPath);
+    try {
+      await unlink(absPath);
+    } catch (e) {
+      console.warn('Gagal menghapus file fisik undangan rapat:', e.message);
+    }
+  }
+
+  // Hapus semua foto dokumentasi fisik jika ada
+  const dokList = db.prepare('SELECT filePath FROM DokumentasiRapat WHERE rapatId = ?').all(id);
+  for (const d of dokList) {
+    if (d.filePath) {
+      try {
+        await unlink(path.join(UPLOAD_DIR, d.filePath));
+      } catch (e) {
+        console.warn('Gagal menghapus foto dokumentasi rapat:', e.message);
+      }
+    }
+  }
+  db.prepare('DELETE FROM DokumentasiRapat WHERE rapatId = ?').run(id);
+
+  // Hapus semua berkas PDF di tabel BerkasRapat
+  const allBerkas = db.prepare('SELECT filePath FROM BerkasRapat WHERE rapatId = ?').all(id);
+  for (const b of allBerkas) {
+    if (b.filePath) {
+      try {
+        await unlink(path.join(UPLOAD_DIR, b.filePath));
+      } catch (e) {
+        console.warn('Gagal menghapus berkas rapat:', e.message);
+      }
+    }
+  }
+  db.prepare('DELETE FROM BerkasRapat WHERE rapatId = ?').run(id);
 
   // Hapus data presensi dan data rapat
   db.prepare('DELETE FROM PresensiRapat WHERE rapatId = ?').run(id);

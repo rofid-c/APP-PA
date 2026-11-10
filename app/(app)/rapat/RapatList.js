@@ -273,7 +273,7 @@ export default function RapatList({ role, user }) {
                     <th style={{ padding: '12px 16px' }}>Nama & Agenda Rapat</th>
                     <th style={{ padding: '12px 16px', width: 170 }}>Jadwal & Tempat</th>
                     <th style={{ padding: '12px 16px', width: 130 }}>Presensi</th>
-                    <th style={{ padding: '12px 16px', width: 150 }}>Rangkuman PDF</th>
+                    <th style={{ padding: '12px 16px', width: 160 }}>Berkas & Lampiran</th>
                     <th style={{ padding: '12px 16px', width: 190, textAlign: 'center' }}>Aksi</th>
                   </tr>
                 </thead>
@@ -359,8 +359,26 @@ export default function RapatList({ role, user }) {
                         </span>
                       </td>
                       <td style={{ padding: '14px 16px' }}>
-                        {r.fileRangkumanPath ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {(r.jumlahUndangan > 0 || r.fileUndanganPath) ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                background: '#eff6ff',
+                                color: '#1d4ed8',
+                                padding: '2px 7px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                width: 'fit-content',
+                              }}
+                            >
+                              <span>📨</span> {r.jumlahUndangan > 1 ? `${r.jumlahUndangan} Undangan` : 'Undangan PDF'}
+                            </span>
+                          ) : null}
+                          {(r.jumlahNotulen > 0 || r.fileRangkumanPath) ? (
                             <span
                               style={{
                                 display: 'inline-flex',
@@ -368,38 +386,40 @@ export default function RapatList({ role, user }) {
                                 gap: 4,
                                 background: '#eaf7ed',
                                 color: '#1e8a63',
-                                padding: '3px 8px',
-                                borderRadius: 6,
-                                fontSize: 11.5,
+                                padding: '2px 7px',
+                                borderRadius: 4,
+                                fontSize: 11,
                                 fontWeight: 700,
                                 width: 'fit-content',
                               }}
                             >
-                              <span>✓</span> PDF Terunggah
+                              <span>📄</span> {r.jumlahNotulen > 1 ? `${r.jumlahNotulen} Notulen` : 'Notulen PDF'}
                             </span>
-                            <a
-                              href={`/api/rapat/${r.id}/rangkuman?mode=view`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{ fontSize: 12, color: '#1a56db', textDecoration: 'underline' }}
+                          ) : null}
+                          {r.jumlahDokumentasi > 0 ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                background: '#fef3c7',
+                                color: '#92400e',
+                                padding: '2px 7px',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                width: 'fit-content',
+                              }}
                             >
-                              Buka Dokumen ↗
-                            </a>
-                          </div>
-                        ) : (
-                          <span
-                            style={{
-                              background: '#f4f6f5',
-                              color: '#8a978f',
-                              padding: '3px 8px',
-                              borderRadius: 6,
-                              fontSize: 11.5,
-                              fontWeight: 600,
-                            }}
-                          >
-                            Belum Ada PDF
-                          </span>
-                        )}
+                              <span>📸</span> {r.jumlahDokumentasi} Foto
+                            </span>
+                          ) : null}
+                          {!(r.jumlahUndangan > 0 || r.fileUndanganPath) && !(r.jumlahNotulen > 0 || r.fileRangkumanPath) && (!r.jumlahDokumentasi || r.jumlahDokumentasi === 0) && (
+                            <span style={{ fontSize: 11, color: '#8a978f', fontStyle: 'italic' }}>
+                              Belum ada berkas
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
