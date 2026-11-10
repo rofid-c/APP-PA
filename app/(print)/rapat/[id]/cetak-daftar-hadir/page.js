@@ -32,6 +32,7 @@ export default function CetakDaftarHadirPage() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloaded, setDownloaded] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -42,6 +43,18 @@ export default function CetakDaftarHadirPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Auto-trigger print/download dialog setelah data dimuat
+  useEffect(() => {
+    if (data && !downloaded) {
+      setDownloaded(true);
+      // Beri waktu render selesai lalu buka dialog simpan PDF
+      const timer = setTimeout(() => {
+        window.print();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [data, downloaded]);
 
   if (loading) {
     return (
@@ -60,7 +73,7 @@ export default function CetakDaftarHadirPage() {
   }
 
   const presensiList = data.presensi || [];
-  // Persis 20 baris seperti di template Word (atau lebih jika peserta > 20)
+  // Minimal 20 baris, atau sesuai jumlah peserta jika lebih dari 20
   const totalBaris = Math.max(20, presensiList.length);
   const rows = [];
   for (let i = 0; i < totalBaris; i++) {
@@ -70,6 +83,68 @@ export default function CetakDaftarHadirPage() {
       jabatan: presensiList[i]?.jabatan || '',
       ttdData: presensiList[i]?.ttdData || null,
     });
+  }
+
+  // Pecah rows menjadi halaman-halaman: halaman 1 = 20 baris, halaman berikutnya = 25 baris
+  // (halaman lanjutan tidak ada kop/meta, jadi muat lebih banyak baris)
+  const BARIS_HALAMAN_1 = 20;
+  const BARIS_HALAMAN_LANJUTAN = 25;
+  const pages = [];
+  if (rows.length <= BARIS_HALAMAN_1) {
+    pages.push(rows);
+  } else {
+    pages.push(rows.slice(0, BARIS_HALAMAN_1));
+    let sisa = rows.slice(BARIS_HALAMAN_1);
+    while (sisa.length > 0) {
+      pages.push(sisa.slice(0, BARIS_HALAMAN_LANJUTAN));
+      sisa = sisa.slice(BARIS_HALAMAN_LANJUTAN);
+    }
+  }
+
+  // Helper: render tabel daftar hadir
+  function renderTabel(pageRows) {
+    return (
+      <table className="daftar-tabel">
+        <thead>
+          <tr>
+            <th style={{ width: '6%', textAlign: 'center' }}>NO.</th>
+            <th style={{ width: '31%', textAlign: 'center' }}>NAMA</th>
+            <th style={{ width: '25%', textAlign: 'center' }}>JABATAN</th>
+            <th style={{ width: '38%', textAlign: 'center' }}>TANDA TANGAN</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pageRows.map((r) => (
+            <tr key={r.no}>
+              <td style={{ textAlign: 'center', fontSize: '9pt' }}>
+                {r.no}.
+              </td>
+              <td style={{ padding: '0 6px', fontWeight: r.nama ? 700 : 400, fontSize: '10pt' }}>
+                {r.nama || ''}
+              </td>
+              <td style={{ padding: '0 6px', fontSize: '9.5pt' }}>
+                {r.jabatan || ''}
+              </td>
+              <td style={{ textAlign: 'center', padding: '1px 4px' }}>
+                {r.ttdData ? (
+                  <img
+                    src={r.ttdData}
+                    alt={`TTD ${r.nama}`}
+                    style={{
+                      height: 24,
+                      maxWidth: 90,
+                      objectFit: 'contain',
+                      display: 'inline-block',
+                      verticalAlign: 'middle',
+                    }}
+                  />
+                ) : null}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
   }
 
   return (
@@ -85,7 +160,7 @@ export default function CetakDaftarHadirPage() {
             ✕ Tutup
           </button>
           <span style={{ fontSize: 13, color: '#334', fontWeight: 600 }}>
-            {data.judul} &bull; <strong style={{ color: '#0f4d3a' }}>{presensiList.length} Peserta Hadir</strong> ({totalBaris} baris)
+            {data.judul} &bull; <strong style={{ color: '#0f4d3a' }}>{presensiList.length} Peserta Hadir</strong> ({totalBaris} baris, {pages.length} halaman)
           </span>
         </div>
 
@@ -93,16 +168,16 @@ export default function CetakDaftarHadirPage() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="btn-toolbar-print"
+            className="btn-toolbar-download"
           >
-            <span>🖨️</span> Cetak / Simpan PDF
+            <span>📥</span> Unduh PDF
           </button>
         </div>
       </div>
 
-      {/* LEMBAR KERTAS A4 PERSIS TEMPLATE WORD */}
+      {/* HALAMAN 1: Kop Surat + Metadata + Tabel Baris 1-20 */}
       <div className="paper-sheet">
-        {/* KOP SURAT MAHKAMAH AGUNG (Tabel 2 Kolom Persis Word) */}
+        {/* KOP SURAT MAHKAMAH AGUNG (Tabel 2 Kolom + Garis Bawah Tebal) */}
         <table className="kop-table">
           <tbody>
             <tr>
@@ -134,6 +209,9 @@ export default function CetakDaftarHadirPage() {
           </tbody>
         </table>
 
+        {/* GARIS BAWAH KOP (Tebal atas, tipis bawah — persis template Word) */}
+        <div className="kop-garis"></div>
+
         {/* JUDUL DAFTAR HADIR (Di Tengah Bergaris Bawah Sesuai Template Word) */}
         <div style={{ textAlign: 'center', marginTop: 14, marginBottom: 12 }}>
           <span
@@ -148,7 +226,7 @@ export default function CetakDaftarHadirPage() {
           </span>
         </div>
 
-        {/* METADATA KEGIATAN PERSIS FORMAT WORD (Tanpa Garis Horizontal) */}
+        {/* METADATA KEGIATAN PERSIS FORMAT WORD */}
         <table className="meta-table">
           <tbody>
             <tr>
@@ -190,48 +268,27 @@ export default function CetakDaftarHadirPage() {
           </tbody>
         </table>
 
-        {/* TABEL KEHADIRAN 20 BARIS PERSIS TEMPLATE WORD */}
-        <table className="daftar-tabel">
-          <thead>
-            <tr>
-              <th style={{ width: '6%', textAlign: 'center' }}>NO.</th>
-              <th style={{ width: '31%', textAlign: 'center' }}>NAMA</th>
-              <th style={{ width: '25%', textAlign: 'center' }}>JABATAN</th>
-              <th style={{ width: '38%', textAlign: 'center' }}>TANDA TANGAN</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.no}>
-                <td style={{ textAlign: 'center', fontSize: '9pt' }}>
-                  {r.no}.
-                </td>
-                <td style={{ padding: '0 6px', fontWeight: r.nama ? 700 : 400, fontSize: '10pt' }}>
-                  {r.nama || ''}
-                </td>
-                <td style={{ padding: '0 6px', fontSize: '9.5pt' }}>
-                  {r.jabatan || ''}
-                </td>
-                <td style={{ textAlign: 'center', padding: '1px 4px' }}>
-                  {r.ttdData ? (
-                    <img
-                      src={r.ttdData}
-                      alt={`TTD ${r.nama}`}
-                      style={{
-                        height: 24,
-                        maxWidth: 90,
-                        objectFit: 'contain',
-                        display: 'inline-block',
-                        verticalAlign: 'middle',
-                      }}
-                    />
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* TABEL HALAMAN 1 */}
+        {renderTabel(pages[0])}
       </div>
+
+      {/* HALAMAN LANJUTAN (jika peserta > 20): setiap halaman punya kop + tabel lanjutan */}
+      {pages.slice(1).map((pageRows, pageIdx) => (
+        <div className="paper-sheet paper-lanjutan" key={pageIdx + 1}>
+          {/* Kop Ringkas Halaman Lanjutan */}
+          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <div style={{ fontSize: '10pt', fontWeight: 700, marginBottom: 2 }}>
+              DAFTAR HADIR (Lanjutan Halaman {pageIdx + 2})
+            </div>
+            <div style={{ fontSize: '9pt', color: '#333' }}>
+              {data.judul} — {formatTanggalIndonesia(data.tanggal)}
+            </div>
+          </div>
+
+          {/* TABEL HALAMAN LANJUTAN */}
+          {renderTabel(pageRows)}
+        </div>
+      ))}
 
       <style jsx global>{`
         /* Reset & Container Layar */
@@ -254,7 +311,7 @@ export default function CetakDaftarHadirPage() {
           border-radius: 6px;
           margin-bottom: 16px;
           display: flex;
-          justifyContent: space-between;
+          justify-content: space-between;
           align-items: center;
           box-shadow: 0 2px 8px rgba(0,0,0,0.25);
           font-family: Arial, sans-serif;
@@ -272,7 +329,7 @@ export default function CetakDaftarHadirPage() {
           cursor: pointer;
         }
 
-        .btn-toolbar-print {
+        .btn-toolbar-download {
           background: #0f4d3a;
           color: #ffffff;
           border: none;
@@ -296,6 +353,11 @@ export default function CetakDaftarHadirPage() {
           box-sizing: border-box;
         }
 
+        /* Halaman lanjutan: jarak antar halaman di layar + page-break saat cetak */
+        .paper-lanjutan {
+          margin-top: 24px;
+        }
+
         .kop-table {
           width: 100%;
           border-collapse: collapse;
@@ -305,6 +367,15 @@ export default function CetakDaftarHadirPage() {
         .kop-table td {
           border: none;
           line-height: 1.25;
+        }
+
+        /* Garis bawah kop surat: tebal atas, tipis bawah (persis template Word) */
+        .kop-garis {
+          border-top: 3px solid #000000;
+          border-bottom: 1px solid #000000;
+          margin-top: 5px;
+          margin-bottom: 0;
+          padding-bottom: 2px;
         }
 
         .meta-table {
@@ -369,6 +440,10 @@ export default function CetakDaftarHadirPage() {
             padding: 0 !important;
             margin: 0 !important;
             box-shadow: none !important;
+          }
+          .paper-lanjutan {
+            page-break-before: always;
+            margin-top: 0 !important;
           }
         }
       `}</style>

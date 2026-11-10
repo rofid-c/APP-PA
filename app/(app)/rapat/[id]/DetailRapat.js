@@ -441,7 +441,7 @@ export default function DetailRapat({ id, role, user }) {
             className="btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, padding: '8px 14px', textDecoration: 'none' }}
           >
-            <span>🖨️</span> Cetak Daftar Hadir
+            <span>📥</span> Unduh Daftar Hadir
           </a>
 
           {bisaKelola && (
@@ -1066,7 +1066,7 @@ export default function DetailRapat({ id, role, user }) {
                 className="btn-primary"
                 style={{ padding: '7px 14px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, textDecoration: 'none', background: '#0f4d3a' }}
               >
-                <span>📄</span> Cetak PDF Daftar Hadir
+                <span>📥</span> Unduh Daftar Hadir
               </a>
 
               <button
