@@ -177,6 +177,9 @@ export default function CetakDaftarHadirPage() {
 
       {/* HALAMAN 1: Kop Surat + Metadata + Tabel Baris 1-20 */}
       <div className="paper-sheet">
+        {/* GARIS ATAS KOP SURAT (persis template Word) */}
+        <div className="kop-garis-atas"></div>
+
         {/* KOP SURAT MAHKAMAH AGUNG (Tabel 2 Kolom + Garis Bawah Tebal) */}
         <table className="kop-table">
           <tbody>
@@ -367,6 +370,12 @@ export default function CetakDaftarHadirPage() {
         .kop-table td {
           border: none;
           line-height: 1.25;
+        }
+
+        /* Garis atas kop surat (persis template Word) */
+        .kop-garis-atas {
+          border-top: 3px solid #000000;
+          margin-bottom: 8px;
         }
 
         /* Garis bawah kop surat: tebal atas, tipis bawah (persis template Word) */
